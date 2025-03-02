@@ -15,4 +15,4 @@ add_executable(ppp_ultimate_cuda main.cu
 set_target_properties(ppp_ultimate_cuda PROPERTIES
                       CUDA_SEPARABLE_COMPILATION ON)
 
-add_compile_options(-g -G)
+#add_compile_options(-g -G)

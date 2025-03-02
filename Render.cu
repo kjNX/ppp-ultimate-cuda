@@ -50,7 +50,7 @@ __device__ Vec3f cast_ray(const Vec3f& origin, const Vec3f& direction,
 		{ return hit - N * (dir * N < 0 ? 1e-3f : -1e-3f); }};
 
 	const size_t& idx{scene_intersect(origin, direction, spheres, sphere_count, hit, N)};
-	printf("%lu\n", idx);
+	// printf("%lu\n", idx);
 	if(depth > Commons::MAX_REFLECTIONS || idx == SIZE_MAX || idx >= sphere_count) return Commons::BG_COLOR;
 	// if(sceneIntersect(origin, direction, spheres)) return Commons::BG_COLOR;
 	/*
@@ -103,15 +103,16 @@ __global__ void render(Vec3f* const& fb,
 	const Sphere* const& spheres, const size_t& sphere_count,
 	const Light* const& lights, const size_t& light_count)
 {
-	// const size_t& i{threadIdx.x + blockIdx.x * blockDim.x};
-	// const float& x{static_cast<float>(i % Commons::RENDER_WIDTH) + .5f - Commons::RENDER_WIDTH / 2.f};
-	// const float& y{-static_cast<float>(i) / Commons::RENDER_WIDTH - .5f + Commons::RENDER_HEIGHT / 2.f};
-	// const float& z{-static_cast<float>(Commons::RENDER_HEIGHT) / (2 * tanf(Commons::FOV / 2.f))};
-	// fb[i] = cast_ray(Commons::RENDER_ORIGIN, Vec3f{x, y, z}.normalize(),
-		// spheres, sphere_count, lights, light_count
+	const size_t& i{threadIdx.x + blockIdx.x * blockDim.x};
+	const float& x{static_cast<float>(i % Commons::RENDER_WIDTH) + .5f - Commons::RENDER_WIDTH / 2.f};
+	const float& y{-static_cast<float>(i) / Commons::RENDER_WIDTH - .5f + Commons::RENDER_HEIGHT / 2.f};
+	const float& z{-static_cast<float>(Commons::RENDER_HEIGHT) / (2 * tanf(Commons::FOV / 2.f))};
+	fb[i] = cast_ray(Commons::RENDER_ORIGIN, Vec3f{x, y, z}.normalize(),
+		spheres, sphere_count, lights, light_count
 		// , lights, bg, bg_width, bg_height
-		// );
+		);
 
+	/*
 	for(size_t i{0u}; i < Commons::RENDER_PIXELS; ++i)
 	{
 	const float& x{static_cast<float>(i % Commons::RENDER_WIDTH) + .5f - Commons::RENDER_WIDTH / 2.f};
@@ -122,6 +123,7 @@ __global__ void render(Vec3f* const& fb,
 		// , lights, bg, bg_width, bg_height
 		);
 	}
+	*/
 
 	// fb[i] = {static_cast<float>(i) / Commons::RENDER_WIDTH / Commons::RENDER_HEIGHT,
 		// static_cast<float>(i % Commons::RENDER_WIDTH) / static_cast<float>(Commons::RENDER_WIDTH), 0};
@@ -144,10 +146,10 @@ __host__ std::chrono::duration<float> render(
 		exit(EXIT_FAILURE);
 	}
 
-	// const size_t& blockSize{512u};
-	// const size_t& blockCount{(Commons::RENDER_PIXELS + blockSize - 1) / blockSize};
+	const size_t& blockSize{512u};
+	const size_t& blockCount{(Commons::RENDER_PIXELS + blockSize - 1) / blockSize};
 	const auto& startTime{clk::now()};
-	render<<<1, 1>>>(d_fb, spheres, sphere_count, lights, light_count);
+	render<<<blockCount, blockSize>>>(d_fb, spheres, sphere_count, lights, light_count);
 	cudaDeviceSynchronize();
 
 	err = cudaGetLastError();
