@@ -20,3 +20,5 @@ $ make
 ![Visual demonstration](out.ppm)
 
 ![Execution](shot.png)
+
+Speedup: 0.514627/0.003366=152.88
